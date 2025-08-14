@@ -1,0 +1,156 @@
+// Masquer les catégories qui n'ont qu'une seule image
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.tv-category-cover').forEach(function(div) {
+    if (div.querySelectorAll('img').length === 1) {
+      div.style.display = 'none';
+    }
+  });
+});
+
+/* === Owl Carousel - Safe loader pour les 2 sliders === */
+(function () {
+  'use strict';
+
+  var SEL_CAT = '.tvcategory-slider-content-box.owl-carousel';           // Slider "catégories" (icônes/accroches)
+  var SEL_TAB = '.tvtabcategory-all-product-slider.owl-carousel';        // Slider "Categories Products" (produits)
+
+  /* Slider 1 : catégories (autoplay) */
+  function initCategorySlider($) {
+    var $sliders = $(SEL_CAT);
+    if (!$sliders.length) return;
+
+    $sliders.each(function () {
+      var $el = $(this);
+      if ($el.data('tvinit')) return; // évite double init
+
+      // Si déjà initialisé, nettoyer puis réinitialiser
+      if ($el.hasClass('owl-loaded')) {
+        $el.trigger('destroy.owl.carousel');
+        $el.removeClass('owl-loaded owl-drag owl-text-select-on');
+        var $outer = $el.children('.owl-stage-outer');
+        if ($outer.length) $outer.children().unwrap();
+      }
+
+      $el.owlCarousel({
+        loop: true,
+        autoplay: true,
+        autoplayTimeout: 2500,
+        autoplayHoverPause: true,
+        smartSpeed: 600,
+        margin: 16,
+        nav: false,
+        dots: true,
+        rtl: document.documentElement.dir === 'rtl',
+        responsive: {
+          0:    { items: 2 },
+          576:  { items: 3 },
+          992:  { items: 4 },
+          1200: { items: 5 }
+        }
+      });
+
+      $el.data('tvinit', true);
+    });
+  }
+
+  /* Slider 2 : products (autoplay + nav externe + reinit onglets) */
+  function initTabProductSlider($) {
+    var $sliders = $(SEL_TAB);
+    if (!$sliders.length) return;
+
+    $sliders.each(function () {
+      var $el = $(this);
+      if ($el.data('tvinit')) return;
+
+      if ($el.hasClass('owl-loaded')) {
+        $el.trigger('destroy.owl.carousel');
+        $el.removeClass('owl-loaded owl-drag owl-text-select-on');
+        var $outer = $el.children('.owl-stage-outer');
+        if ($outer.length) $outer.children().unwrap();
+      }
+
+      $el.owlCarousel({
+        loop: true,
+        autoplay: true,
+        autoplayTimeout: 2500,
+        autoplayHoverPause: true,
+        smartSpeed: 600,
+        margin: 16,
+        nav: false,
+        dots: true,
+        rtl: document.documentElement.dir === 'rtl',
+        responsive: {
+          0:    { items: 2 },
+          576:  { items: 2 },
+          768:  { items: 3 },
+          992:  { items: 4 },
+          1200: { items: 5 }
+        }
+        // Optionnel : stagePadding: 24
+      });
+
+      $el.data('tvinit', true);
+    });
+  }
+
+  /* Boutons externes (prev/next) pour le slider produits */
+  function bindExternalNav($) {
+    $(document).off('click.tvtab-owl-nav').on('click.tvtab-owl-nav',
+      '.tvcmsprev-btn, .tvcmsnext-btn', function (e) {
+        e.preventDefault();
+        var $container = $(this).closest('.tvcmstabcategory-product-slider');
+        var $slider = $container.find(SEL_TAB);
+        if (!$slider.length) return;
+        if ($(this).hasClass('tvcmsprev-btn')) $slider.trigger('prev.owl.carousel');
+        else $slider.trigger('next.owl.carousel');
+      }
+    );
+  }
+
+  /* Re-init après click sur un onglet catégorie (le module recharge via AJAX) */
+  function bindTabReinit($) {
+    $(document).off('click.tvtab-reinit').on('click.tvtab-reinit',
+      '.tvtabcategory-product-li a', function () {
+        setTimeout(function(){ initTabProductSlider($); }, 400);
+      }
+    );
+  }
+
+  /* Boot commun (attend jQuery + Owl) */
+  function boot() {
+    if (window.jQuery && window.jQuery.fn && window.jQuery.fn.owlCarousel) {
+      var $ = window.jQuery;
+
+      initCategorySlider($);
+      initTabProductSlider($);
+      bindExternalNav($);
+      bindTabReinit($);
+
+      // Re-init global après AJAX
+      $(document).on('ajaxComplete', function(){
+        initCategorySlider($);
+        initTabProductSlider($);
+      });
+
+      // Re-init si du DOM est injecté
+      try {
+        new MutationObserver(function(){
+          initCategorySlider($);
+          initTabProductSlider($);
+        }).observe(document.body, { childList: true, subtree: true });
+      } catch (e) {}
+
+    } else {
+      // jQuery ou Owl pas encore prêts → ré-essaye
+      setTimeout(boot, 200);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+  window.addEventListener('load', boot);
+})();
+
