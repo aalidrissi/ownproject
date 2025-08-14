@@ -1,0 +1,58 @@
+.whatsapp-button {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 9999;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #25d366;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.whatsapp-button img {
+  width: 32px;
+  height: 32px;
+}
+
+.tvcategory-slider-item{
+  display:none !important;
+}
+
+/* 1) Masquer la colonne langue/devise */
+.tvheader-language-currency-wrapper{
+  display: none !important;
+}
+
+/* 2) La colonne de l'offre prend toute la largeur */
+.tvcmsdesktop-top-header .tvheader-offer-wrapper{
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* 3) Centrer le contenu (icône + texte) */
+.tvcmsdesktop-top-header .tvheader-nav-offer-text{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  width: 100%;
+}
+
+/* Fallback au cas où le parent n'est pas en flex */
+.tvcmsdesktop-top-header .tvcmsdesktop-top-wrapper{
+  display: flex;
+  align-items: center;
+}
+
+/* Limiter à 4 liens, garder "Show All" intact */
+.tvcategory-chain-slider-info-wrapper
+  .tvcategory-chain-category-list
+  > a.tvcategory-chain-slider-category:nth-of-type(n+5) {
+  display: none !important;
+}
