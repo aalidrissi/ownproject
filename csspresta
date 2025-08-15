@@ -56,3 +56,33 @@
   > a.tvcategory-chain-slider-category:nth-of-type(n+5) {
   display: none !important;
 }
+
+/* Cible uniquement ce bloc */
+.tvcmsadvanceblock-slider-main-title-wrapper .tvmain-sub-title h4,
+.tvcmsadvanceblock-slider-main-title-wrapper .tvmain-title h2,
+.tvcmsadvanceblock-slider-main-title-wrapper .tvadvance-block-sub-description{
+  color: transparent !important;
+  text-shadow: none !important;
+}
+
+/* Si le thème injecte du texte via pseudo-éléments, on les vide */
+.tvcmsadvanceblock-slider-main-title-wrapper .tvmain-sub-title h4::before,
+.tvcmsadvanceblock-slider-main-title-wrapper .tvmain-sub-title h4::after,
+.tvcmsadvanceblock-slider-main-title-wrapper .tvmain-title h2::before,
+.tvcmsadvanceblock-slider-main-title-wrapper .tvmain-title h2::after,
+.tvcmsadvanceblock-slider-main-title-wrapper .tvadvance-block-sub-description::before,
+.tvcmsadvanceblock-slider-main-title-wrapper .tvadvance-block-sub-description::after{
+  content: "" !important;
+}
+
+/* N'applique qu'à cette bannière Livraison */
+a.banner[href*="/content/1-delivery"]{
+  display: block;        /* pour que le margin s'applique correctement */
+  margin-top: 12px;      /* espace au-dessus */
+}
+
+/* Optionnel : éviter l'espace blanc sous l'image */
+a.banner[href*="/content/1-delivery"] img{
+  display: block;
+}
+
