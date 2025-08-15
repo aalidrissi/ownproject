@@ -153,3 +153,34 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   window.addEventListener('load', boot);
 })();
+
+  /* défiler auto 3 bloc avec sous catégories */
+document.addEventListener('DOMContentLoaded', function () {
+  if (!window.jQuery || !jQuery.fn.owlCarousel) return;
+
+  // Cible uniquement ce slider (adaptable si besoin)
+  var $carousels = jQuery('.owl-carousel').has('.tvcategory-chain-slider-info-wrapper');
+
+  $carousels.each(function () {
+    var $owl = jQuery(this);
+    if ($owl.hasClass('owl-loaded')) {
+      // Déjà initialisé → on lance l’autoplay
+      $owl.trigger('play.owl.autoplay', [4000]); // 4000ms
+    } else {
+      // Pas initialisé → on init avec autoplay
+      $owl.owlCarousel({
+        items: 3,
+        loop: true,
+        autoplay: true,
+        autoplayTimeout: 4000,
+        autoplayHoverPause: true,
+        smartSpeed: 600,
+        responsive: {
+          0:   { items: 1 },
+          576: { items: 2 },
+          992: { items: 3 }
+        }
+      });
+    }
+  });
+});
