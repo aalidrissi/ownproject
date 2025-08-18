@@ -86,3 +86,41 @@ a.banner[href*="/content/1-delivery"] img{
   display: block;
 }
 
+/* Conteneur centré et largeur max */
+.tally-embed-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  overflow: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Iframe responsive + fallback si le JS ne charge pas */
+.tally-embed-wrapper iframe,
+iframe[data-tally-src] {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  border: 0 !important;
+  min-height: 800px; /* hauteur de secours */
+}
+
+/* Un peu de respiration dans les pages CMS (optionnel) */
+.cms .tally-embed-wrapper {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+/* Ajuste la hauteur de secours sur petits écrans */
+@media (max-width: 992px) {
+  .tally-embed-wrapper iframe,
+  iframe[data-tally-src] {
+    min-height: 860px;
+  }
+}
+@media (max-width: 576px) {
+  .tally-embed-wrapper iframe,
+  iframe[data-tally-src] {
+    min-height: 920px;
+  }
+}
