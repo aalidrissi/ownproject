@@ -184,3 +184,101 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 });
+
+/* === Tally Embed Safe Loader (no globals, no conflicts) === */
+(function () {
+  'use strict';
+
+  var WIDGET_URL = 'https://tally.so/widgets/embed.js';
+  var LOAD_DEBOUNCE_MS = 250;
+  var debounceTimer = null;
+
+  // Si le widget Tally n'est pas dispo, on pose src depuis data-tally-src pour un affichage "statique"
+  function hydrateIframesFallback() {
+    var nodes = document.querySelectorAll('iframe[data-tally-src]:not([src])');
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var src = el.getAttribute('data-tally-src');
+      if (src) el.setAttribute('src', src);
+    }
+  }
+
+  function initEmbeds() {
+    if (window.Tally && typeof window.Tally.loadEmbeds === 'function') {
+      window.Tally.loadEmbeds();         // active dynamicHeight, etc.
+    } else {
+      hydrateIframesFallback();          // fallback si le script n'a pas chargé
+    }
+  }
+
+  function ensureWidgetLoaded(cb) {
+    // Déjà présent ?
+    if (window.Tally && typeof window.Tally.loadEmbeds === 'function') {
+      cb();
+      return;
+    }
+
+    // Script déjà injecté ailleurs ?
+    var existing = document.querySelector(
+      'script[src="' + WIDGET_URL + '"], script[src^="' + WIDGET_URL + '"]'
+    );
+    if (existing) {
+      existing.addEventListener('load', cb, { once: true });
+      existing.addEventListener('error', function () {
+        hydrateIframesFallback();
+        cb();
+      }, { once: true });
+      return;
+    }
+
+    // Injection contrôlée du script
+    var s = document.createElement('script');
+    s.src = WIDGET_URL;
+    s.async = true;
+    s.onload = cb;
+    s.onerror = function () {
+      hydrateIframesFallback();
+      cb();
+    };
+    (document.body || document.documentElement).appendChild(s);
+  }
+
+  function debouncedInit() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function () {
+      ensureWidgetLoaded(initEmbeds);
+    }, LOAD_DEBOUNCE_MS);
+  }
+
+  // Ready helpers (sans polluer le global)
+  function onReady(fn) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fn);
+    } else {
+      fn();
+    }
+  }
+
+  // Lancements clés
+  onReady(debouncedInit);
+  window.addEventListener('load', debouncedInit);
+
+  // Si du DOM est injecté (modules qui remplacent le contenu), on relance proprement
+  try {
+    var mo = new MutationObserver(function (muts) {
+      for (var i = 0; i < muts.length; i++) {
+        if (muts[i].addedNodes && muts[i].addedNodes.length) {
+          debouncedInit();
+          break;
+        }
+      }
+    });
+    mo.observe(document.documentElement, { childList: true, subtree: true });
+  } catch (e) { /* silencieux */ }
+
+  // Si jQuery est présent, on accroche ajaxComplete sans collision
+  if (window.jQuery && typeof window.jQuery === 'function') {
+    window.jQuery(document).off('.tallyembed').on('ajaxComplete.tallyembed', debouncedInit);
+  }
+})();
+
