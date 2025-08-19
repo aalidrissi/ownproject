@@ -124,3 +124,26 @@ iframe[data-tally-src] {
     min-height: 920px;
   }
 }
+
+/* Cache le wrapper et toutes les sections par défaut */
+#pd-skin-reco { display: none !important; }
+#pd-skin-reco .pd-skin-block { display: none !important; margin-top: 24px; }
+
+/* Quand on rend le wrapper visible */
+#pd-skin-reco.is-visible { 
+  display: block !important; 
+  visibility: visible !important; 
+  height: auto !important; 
+  overflow: visible !important; 
+}
+
+#pd-skin-reco { margin-top: 24px; }
+#pd-skin-title { font-size: 1.25rem; margin-bottom: 12px; }
+#pd-skin-iframe { width: 100%; min-height: 900px; border: 0; }
+.pd-skin-more { margin-top: 12px; text-align: right; }
+.pd-skin-more a { text-decoration: underline; }
+
+@media (max-width: 768px) {
+  #pd-skin-iframe { min-height: 1000px; }
+}
+
