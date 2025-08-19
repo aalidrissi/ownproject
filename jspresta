@@ -282,3 +282,109 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 })();
 
+// Tally Thank You -> (attendre 5s) -> afficher un spinner -> (attendre 1.2s) -> redirection vers l’URL calculée
+(() => {
+  const SPINNER_DELAY_MS = 15000;          // délai avant d'afficher le spinner
+  const REDIRECT_AFTER_SPINNER_MS = 1200; // durée d’affichage du spinner avant redirection
+  const URL_FIELD_TITLES = new Set(['URL', 'Url', 'url']); // nom du champ calculé dans Tally
+
+  let submitHandled = false;  // empêche les doubles redirections sur une même soumission
+  let timerShowSpinner = null;
+  let timerRedirect = null;
+
+  function extractTargetUrl(fields) {
+    if (!Array.isArray(fields)) return null;
+    for (const f of fields) {
+      const title = (f?.title || f?.label || f?.id || '').trim();
+      const value = f?.answer?.value ?? f?.value ?? f?.answer ?? null;
+      if (value && URL_FIELD_TITLES.has(title)) return String(value);
+      // fallback si Tally encapsule les champs calculés/masqués
+      if ((f?.type || '').includes('CALCULATED') || (f?.type || '').includes('HIDDEN')) {
+        if (value && URL_FIELD_TITLES.has(title)) return String(value);
+      }
+    }
+    return null;
+  }
+
+  function ensureSpinnerStyles() {
+    if (document.getElementById('tally-spinner-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'tally-spinner-styles';
+    style.textContent = `
+      @keyframes tally-spin{to{transform:rotate(360deg)}}
+      #tally-spinner-overlay{
+        position:fixed; inset:0; background:rgba(255,255,255,.85);
+        display:flex; align-items:center; justify-content:center; flex-direction:column;
+        z-index:2147483647;
+      }
+      #tally-spinner{
+        width:64px; height:64px; border-radius:50%;
+        border:6px solid rgba(0,0,0,.15); border-top-color:currentColor;
+        animation:tally-spin 1s linear infinite; margin-bottom:12px;
+      }
+      #tally-spinner-text{
+        font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+        font-size:14px; color:#111; opacity:.8; text-align:center;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function showSpinnerOverlay() {
+    if (document.getElementById('tally-spinner-overlay')) return;
+    ensureSpinnerStyles();
+    const overlay = document.createElement('div');
+    overlay.id = 'tally-spinner-overlay';
+    overlay.innerHTML = `
+      
+      Redirection en cours…
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  function scheduleRedirect(targetUrl) {
+    if (submitHandled || !targetUrl) return;
+    submitHandled = true;
+
+    timerShowSpinner = window.setTimeout(() => {
+      showSpinnerOverlay();
+      timerRedirect = window.setTimeout(() => {
+        window.location.href = targetUrl;
+      }, REDIRECT_AFTER_SPINNER_MS);
+    }, SPINNER_DELAY_MS);
+  }
+
+  function handleFields(fields) {
+    const target = extractTargetUrl(fields);
+    if (target) scheduleRedirect(target);
+  }
+
+  // 1) Cas embed (iframe) : Tally envoie un postMessage
+  window.addEventListener('message', (e) => {
+    try {
+      let msg = e.data;
+      if (!msg) return;
+
+      // (Optionnel) filtrer l'origine :
+      // const host = new URL(e.origin).hostname;
+      // if (!/(\.|^)tally\.so$/.test(host)) return;
+
+      if (typeof msg === 'string') {
+        if (!msg.includes('Tally.FormSubmitted')) return;
+        try { msg = JSON.parse(msg); } catch { /* parfois non-JSON, mais le flag suffit */ }
+      } else if (typeof msg === 'object' && msg?.event !== 'Tally.FormSubmitted') {
+        return;
+      }
+
+      const fields = msg?.payload?.fields || msg?.detail?.fields || msg?.fields || [];
+      handleFields(fields);
+    } catch {}
+  }, false);
+
+  // 2) Cas Tally Pro + domaine custom : évènement natif
+  window.addEventListener('Tally.FormSubmitted', (e) => {
+    const fields = e?.detail?.fields || [];
+    handleFields(fields);
+  });
+})();
+
