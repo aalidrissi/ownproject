@@ -1,3 +1,8 @@
+  /* Iframe Calendly – conteneur responsive */
+  .iframe-wrap{background:var(--card);border:1px solid #eef2f0;border-radius:14px;box-shadow:var(--shadow);padding:10px}
+  .iframe-wrap iframe{width:100%;min-height:760px;border:0;border-radius:10px}
+  @media (min-width:992px){.iframe-wrap iframe{min-height:720px}}
+
 .whatsapp-button {
   position: fixed;
   bottom: 20px;
