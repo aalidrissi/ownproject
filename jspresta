@@ -388,3 +388,50 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 })();
 
+// Fond "tvcmsadvance-block" cliquable -> ouvre l'article
+(() => {
+  const TARGET_URL = 'https://paradiem.ma/blog/post/4/un-mot-de-la-ceo-chaimae-arrach?page_type=post';
+  const IMG_NAME   = 'demo_main_block_img_20250815193636.png';
+  const SEL = [
+    `.tvcmsadvance-block[data-bg-url*="${IMG_NAME}"]`,
+    `.tvcmsadvance-block[style*="${IMG_NAME}"]`
+  ].join(',');
+
+  function bind() {
+    document.querySelectorAll(SEL).forEach(el => {
+      if (el.__bgLinkBound) return;
+      el.__bgLinkBound = true;
+
+      // accessibilité + feedback visuel
+      el.style.cursor = 'pointer';
+      el.setAttribute('role', 'link');
+      el.setAttribute('tabindex', '0');
+
+      // clic sur le fond → redirection (on laisse vivre les liens/boutons internes)
+      el.addEventListener('click', function (e) {
+        if (e.target.closest('a, button, [role="button"], .js-search-link')) return;
+        e.preventDefault?.();
+        window.location.href = TARGET_URL;
+      }, { capture: true });
+
+      // clavier (Entrée) → redirection
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+          e.preventDefault?.();
+          window.location.href = TARGET_URL;
+        }
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bind);
+  } else {
+    bind();
+  }
+
+  // Si le DOM est réinjecté (ajax, modules), on ré-applique
+  try {
+    new MutationObserver(bind).observe(document.documentElement, { childList: true, subtree: true });
+  } catch (e) {}
+})();
